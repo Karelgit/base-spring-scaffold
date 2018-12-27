@@ -1,0 +1,15 @@
+spring:
+  profiles:
+    active: dev
+
+
+com:
+  cloudpioneer:
+    #是否改变响应状态码
+    changeWebCode: true
+
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: false
