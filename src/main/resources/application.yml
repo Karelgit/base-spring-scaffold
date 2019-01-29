@@ -1,7 +1,11 @@
 spring:
   profiles:
     active: dev
-
+  session:
+    store-type: redis
+  redis:
+    host: 108.108.108.205
+    port: 6379
 
 com:
   cloudpioneer:

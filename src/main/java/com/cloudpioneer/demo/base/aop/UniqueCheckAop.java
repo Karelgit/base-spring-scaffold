@@ -1,18 +1,18 @@
 package com.cloudpioneer.demo.base.aop;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.TableFieldInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.toolkit.TableInfoHelper;
 import com.cloudpioneer.demo.base.annotation.UniqueCheck;
+import com.cloudpioneer.demo.base.entity.ContextUtil;
 import com.cloudpioneer.demo.base.entity.FailureResult;
 import com.cloudpioneer.demo.base.exception.GlobalException;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -29,17 +29,11 @@ import java.util.*;
 @Component
 public class UniqueCheckAop {
 
-    private final BaseMapper baseMapper;
-
-    @Autowired
-    @SuppressWarnings("SpringJavaAutowiringInspection")
-    public UniqueCheckAop(BaseMapper baseMapper) {
-        this.baseMapper = baseMapper;
-    }
-
     @Pointcut("@annotation(com.cloudpioneer.demo.base.annotation.UniqueCheck)")
     public void pointCut() {
     }
+
+    private static String mapperLocation = "com.cloudpioneer.appcrawlerjson.mapper.";
 
     @Before("pointCut() && @annotation(uniqueCheck)")
     public void doBefore(JoinPoint joinPoint, UniqueCheck uniqueCheck) throws InstantiationException, IllegalAccessException {
@@ -130,7 +124,20 @@ public class UniqueCheckAop {
             return i;
         });
 
-        return baseMapper.selectMaps(queryWrapper);
+        String name = tableInfo.getClazz().getName();
+        name = mapperLocation + name.substring(name.lastIndexOf(".")+1)+ "Mapper";
+
+        Class<?> clazz ;
+        List<Map<String,Object>> result = null;
+        try {
+            clazz = Class.forName(name);
+            Method methods = clazz.getMethod("selectMaps", Wrapper.class);
+            result = (List<Map<String,Object>>)methods.invoke(ContextUtil.getBean(clazz), queryWrapper);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 
     /**
